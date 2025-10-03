@@ -1,0 +1,13 @@
+arquivo json do appium inspector 
+
+
+{
+  "platformName": "Android",
+  "appium:deviceName": "emulator-5554",
+  "appium:automationName": "UiAutomator2"
+}
+
+
+
+comando para todar no terminal
+python3 test_open_app.py
