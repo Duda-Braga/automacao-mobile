@@ -6,7 +6,7 @@ arquivo json do appium inspector
   "appium:deviceName": "emulator-5554",
   "appium:automationName": "UiAutomator2"
 }
-
+--> precisa botar o comando "appium" em algum terminal
 
 
 comando para todar no terminal
