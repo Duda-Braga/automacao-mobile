@@ -3,26 +3,7 @@ from appium import webdriver
 from appium .options.common.base import AppiumOptions
 from appium.webdriver.common.appiumby import AppiumBy
 
-options = AppiumOptions()
-options.load_capabilities({
-    "platformName": "Android",
-    "appium:deviceName": "emulator-5554",
-    "appium:automationName": "UiAutomator2",
-    "appium:appPackage": "com.saucelabs.mydemoapp.android",
-    "appium:ensureWebviewsHavePages": True,
-    "appium:nativeWebScreenshot": True,
-    "appium:newCommandTimeout": 3600,
-    "appium:connectHardwareKeyboard": True,
-    "appWaitActivity": "com.saucelabs.mydemoapp.android.view.activities.MainActivity",
-    "appWaitDuration": 30000, # opcional, tempo de espera em ms (30s)
-    "uiautomator2ServerLaunchTimeout": 30000,
-    "uiautomator2ServerInstallTimeout": 30000
-})
-
-
-driver = webdriver.Remote("http://127.0.0.1:4723", options=options)
-time.sleep(1)
-
+expected_home_screen_mssg = "Products"
 expected_orange_backpack_name = "Sauce Labs Backpack (orange)"
 expected_my_cart_screen_text = "My Cart"
 expected_unity_value_orange_backpack = "$ 29.99"
@@ -34,7 +15,7 @@ username = "user test"
 expecteed_shipment_adress_screen_mssg = "Enter a shipping address"
 expecteed_pay_method_screen_mssg = "Enter a payment method"
 expected_review_order_screen_mssg = "Review your order"
-
+expected_checkout_complete_mssg = "Checkout Complete"
 
 #checkou info
 full_name = "Test Person"
@@ -48,13 +29,36 @@ card_number = "1234567809101112"
 expiration_date = "03/30"
 security_code = "456"
 
+options = AppiumOptions()
+options.load_capabilities({
+    "platformName": "Android",
+    "appium:deviceName": "emulator-5554",
+    "appium:automationName": "UiAutomator2",
+    "appium:appPackage": "com.saucelabs.mydemoapp.android",
+    "appium:ensureWebviewsHavePages": True,
+    "appium:nativeWebScreenshot": True,
+    "appium:newCommandTimeout": 3600,
+    "appium:connectHardwareKeyboard": True,
+    "appWaitActivity": "com.saucelabs.mydemoapp.android.view.activities.MainActivity",
+    "appWaitDuration": 30000, # opcional, tempo de espera em ms (30s)
+    "uiautomator2ServerLaunchTimeout": 30000,
+    "uiautomator2ServerInstallTimeout": 30000,
+    "unicodeKeyboard": False,
+    "resetKeyboard": True
+})
+
+
+driver = webdriver.Remote("http://127.0.0.1:4723", options=options)
+time.sleep(1)
+
 # Start the application and ensure that the home screen has loaded.
 home_screen = driver.find_elements(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/productTV")
 assert home_screen != [], "Home screen page did not load"
+actual_home_screen_mssg = home_screen[0].text
+assert actual_home_screen_mssg == expected_home_screen_mssg, "Wrong page loaded, it should be home page"
 
 # Select the product Sauce Labs Backpack (orange) from the list of products 
-orange_backpack = driver.find_element(by=AppiumBy.XPATH, value="(//android.widget.ImageView[@content-desc='Product Image'])[3]")
-orange_backpack.click()
+driver.find_element(by=AppiumBy.XPATH, value="(//android.widget.ImageView[@content-desc='Product Image'])[3]").click()
 
 # validate if it opens
 time.sleep(1)
@@ -71,8 +75,8 @@ new_qntt_orange_backpack = int(driver.find_element(by=AppiumBy.ID, value="com.sa
 assert qntt_orange_backpack - new_qntt_orange_backpack == 1, f"Quantity should be {qntt_orange_backpack - 1} but is {new_qntt_orange_backpack}"
 
 # Also validate that when you reach zero quantity of products the Add to cart button will become inactive
-if (new_qntt_orange_backpack == 0):
-    add_cart_button = driver.find_element(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/cartBt")
+add_cart_button = driver.find_element(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/cartBt")
+if new_qntt_orange_backpack == 0:
     assert add_cart_button.is_enabled() == False, "Add to cart button should not work"
 
 # Increase the quantity of products by pressing '+' and check that the quantity has increased by 1 unit
@@ -113,7 +117,7 @@ assert actual_my_cart_screen_text == expected_my_cart_screen_text, "Wrong page, 
 # Validate that your product is correct
 my_cart_orange_backpack = driver.find_elements(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/titleTV")
 assert my_cart_orange_backpack != [], "Product is not in the cart"
-assert  my_cart_orange_backpack[0].text == expected_orange_backpack_name, "Wrong Product name in the cart"
+assert my_cart_orange_backpack[0].text == expected_orange_backpack_name, "Wrong Product name in the cart"
 
 # Validate that the unit value is as expected
 actual_unity_value_orange_backpack = driver.find_element(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/priceTV").text
@@ -155,7 +159,6 @@ assert actual_empty_user_error_mssg == expected_empty_user_error_mssg, "Wrong me
 
 # Try to log in without entering Password and validate the error in the Password field
 username_field = driver.find_element(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/nameET")
-username_field.click()
 username_field.send_keys(username)
 login_button.click()
 time.sleep(1)
@@ -209,7 +212,6 @@ to_payment_btn.click()
 
 # PLUS: Validate all the required fields and their errors when trying to submit the payment without entering these fields
 
-
 # Validate that the Checkout, Payment screen has been displayed
 time.sleep(1)
 payment_method_screen = driver.find_elements(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/enterPaymentMethodTV")
@@ -256,7 +258,6 @@ assert review_product_name == expected_orange_backpack_name, f"Wrong producto na
 review_unity_value = driver.find_element(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/priceTV").text
 assert review_unity_value == expected_unity_value_orange_backpack, f"Wroong unity value, it should be {expected_unity_value_orange_backpack}"
 
-
 # Validate that the Deliver Address and Payment Method information is correct
 review_full_name = driver.find_element(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/fullNameTV").text
 assert review_full_name == full_name, "Wrong name in review order address screen"
@@ -296,20 +297,36 @@ assert review_card_number == card_number, "Wrong Card Number in payment review o
 review_expo_date = driver.find_element(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/expirationDateTV").text
 assert review_expo_date[5:] == expiration_date, "Wrong Expiration Date in payment review order screen"
 
-
 # Validate that the total value of the items plus the Freight value is correct.
-
 review_final_value = driver.find_element(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/totalAmountTV").text
 review_freight = driver.find_element(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/amountTV").text
-expected_final_value = actual_total_price_cart + float(review_freight[3:]) 
-actual_final_value = float(review_freight[3:])
+expected_final_value = actual_total_price_cart + float(review_freight[1:]) 
+actual_final_value = float(review_final_value[2:])
 assert actual_final_value == expected_final_value, "Wrong sum of final price with freight"
-print("PEGOUU \n \n \n \n")
 
 # Click on the Place Order button
+place_order_btn = driver.find_element(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/paymentBtn")
+place_order_btn.click()
+
 # Validate that the Checkout Complete screen has been displayed
+time.sleep(1)
+checkout_complete = driver.find_elements(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/completeTV")
+assert checkout_complete != [], "Chekout Complete did not load"
+actual_checkout_complete_mssg = checkout_complete[0].text
+assert actual_checkout_complete_mssg == expected_checkout_complete_mssg, "Wrong page loaded, it should be checkout complete screen"
+
 # Click on the Continue Shopping button
+continue_shop_btn = driver.find_element(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/shoopingBt")
+continue_shop_btn.click()
+
 # Validate that the Products screen has been displayed and that the cart is empty.
+time.sleep(1)
+home_screen = driver.find_elements(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/productTV")
+assert home_screen != [], "Home screen page did not load"
+actual_home_screen_mssg = home_screen[0].text
+assert actual_home_screen_mssg == expected_home_screen_mssg, "Wrong page loaded, it should be home page"
+is_cart_empty = driver.find_elements(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/cartTV")
+assert is_cart_empty == [], "Cart should be empty"
 
-
-#driver.quit()
+print("passou\n\n\n\n\n")
+driver.quit()
