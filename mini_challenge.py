@@ -28,6 +28,12 @@ country = "Brasil"
 card_number = "1234567809101112"
 expiration_date = "03/30"
 security_code = "456"
+expected_empty_name_error = "Please provide your full name."
+expected_empty_address_one_error = "Please provide your address."
+expected_empty_city_error = "Please provide your city."
+expected_empty_zip_error = "Please provide your zip"
+expected_empty_country_error = "Please provide your"
+empty_payment_error = "Value looks invalid."
 
 options = AppiumOptions()
 options.load_capabilities({
@@ -186,6 +192,33 @@ actual_shipment_adress_screen_mssg = shipment_address_screen[0].text
 assert actual_shipment_adress_screen_mssg == expecteed_shipment_adress_screen_mssg, "Wrong page loaded, it should be shipment address"
 
 # Enter information in all the form fields and proceed to payment.
+# PLUS: Validate all the required fields and their errors when trying to submit the payment without entering these fields
+to_payment_btn = driver.find_element(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/paymentBtn")
+to_payment_btn.click()
+
+# empty errors
+time.sleep(1)
+empty_full_name = driver.find_elements(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/fullNameErrorTV")
+assert empty_full_name != [], "Empty name error message did not appear"
+assert empty_full_name[0].text == expected_empty_name_error, f"Wrong empty name error message, it should be {expected_empty_name_error}"
+
+empty_address_one = driver.find_elements(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/address1ErrorTV")
+assert empty_address_one != [], "Empty addrees error message did not appear"
+assert empty_address_one[0].text == expected_empty_address_one_error, f"Wrong empty address one error message, it should be {expected_empty_address_one_error}"
+
+empty_city = driver.find_elements(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/cityErrorTV")
+assert empty_city != [], "Empty city error message did not appear"
+assert empty_city[0].text == expected_empty_city_error, f"Wrong empty city error message, it should be {expected_empty_city_error}"
+
+empty_zip = driver.find_elements(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/zipErrorTV")
+assert empty_zip != [], "Empty zip error message did not appear"
+assert empty_zip[0].text == expected_empty_zip_error, f"Wrong empty zip error message, it should be {expected_empty_zip_error}"
+
+empty_country = driver.find_elements(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/countryErrorTV")
+assert empty_country != [], "Empty country error message did not appear"
+assert empty_country[0].text == expected_empty_country_error, f"Wrong empty country error message, it should be {expected_empty_country_error}"
+      
+# filing the fields
 full_name_field = driver.find_element(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/fullNameET")
 full_name_field.send_keys(full_name)
 
@@ -207,10 +240,7 @@ zip_code_field.send_keys(zip_code)
 country_field = driver.find_element(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/countryET")
 country_field.send_keys(country)
 
-to_payment_btn = driver.find_element(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/paymentBtn")
 to_payment_btn.click()
-
-# PLUS: Validate all the required fields and their errors when trying to submit the payment without entering these fields
 
 # Validate that the Checkout, Payment screen has been displayed
 time.sleep(1)
@@ -218,6 +248,27 @@ payment_method_screen = driver.find_elements(by=AppiumBy.ID, value="com.saucelab
 assert payment_method_screen != [], "Checkout, Payment Method screen did not load"
 actual_pay_method_screen_mssg = payment_method_screen[0].text
 assert actual_pay_method_screen_mssg == expecteed_pay_method_screen_mssg, "Wrong page loaded, it should be payment method"
+
+# PLUS: Validate all mandatory fields.
+#empty erros
+review_order_btn = driver.find_element(by=AppiumBy.ID, value= "com.saucelabs.mydemoapp.android:id/paymentBtn")
+review_order_btn.click()
+time.sleep(1)
+
+empty_name_pay = driver.find_elements(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/nameErrorTV")
+assert empty_name_pay != [], "Empty name payment error message did not appear"
+assert empty_name_pay[0].text == empty_payment_error, f"Wrong X address one error message, it should be {empty_payment_error}"
+
+empty_card_number = driver.find_elements(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/cardNumberErrorIV")
+
+empty_expiration_date = driver.find_elements(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/expirationDateErrorTV")
+assert empty_expiration_date != [], "Empty expiration date error message did not appear"
+assert empty_expiration_date[0].text == empty_payment_error, f"Wrong Empty expiration date address one error message, it should be {empty_payment_error}"
+
+empty_security_code = driver.find_elements(by=AppiumBy.ID, value="com.saucelabs.mydemoapp.android:id/securityCodeErrorTV")
+assert empty_security_code != [], "Empty securtity code error message did not appear"
+assert empty_security_code[0].text == empty_payment_error, f"Wrong Empty securtity code address one error message, it should be {empty_payment_error}"
+
 
 # Enter the values in the corresponding fields and keep the check-box selected
 full_name_field = driver.find_element(by=AppiumBy.ID, value= "com.saucelabs.mydemoapp.android:id/nameET")
@@ -236,12 +287,48 @@ payment_checkbox = driver.find_element(by=AppiumBy.ID, value= "com.saucelabs.myd
 if(payment_checkbox.get_attribute("checked") == False):
     payment_checkbox.click() #enable checkbox
 
-
-# PLUS: Validate all mandatory fields.
 # PLUS: Uncheck the Checkbox and Validate all required fields and their errors when trying to submit the payment without entering these fields.
+if(payment_checkbox.get_attribute("checked") == True):
+    payment_checkbox.click() #disable checkbox
+
+review_order_btn.click()
+#scroll
+size = driver.get_window_size()
+screen_width = size['width']
+screen_height = size['height']
+driver.execute_script("mobile: scrollGesture", {
+    "left": 0,
+    "top": screen_height * 0.3,
+    "width": screen_width,
+    "height": screen_height * 0.5,
+    "direction": "down",
+    "percent": 1.0
+})
+
+#empty errors
+
+expected_name_check_error = "Please provide your full name."
+com.saucelabs.mydemoapp.android:id/fullNameErrorTV
+
+expected_address_check_error = "Please provide your address."
+com.saucelabs.mydemoapp.android:id/address1ErrorTV
+
+expected_city_check_error = "Please provide your city."
+com.saucelabs.mydemoapp.android:id/cityErrorTV
+
+expected_zip_check_error = "Please provide your zip"
+com.saucelabs.mydemoapp.android:id/zipErrorTV
+
+expected_country_check_error = "Please provide your"
+com.saucelabs.mydemoapp.android:id/countryErrorTV
+
+empty_ = driver.find_elements(by=AppiumBy.ID, value="")
+assert empty_ != [], "Empty shipping address code error message did not appear"
+assert empty_[0].text == empty_payment_error, f"Wrong Empty shipping address code address one error message, it should be {empty_payment_error}"
+
+#filing fields
 
 # Proceed to the review by clicking on the Review Order button
-review_order_btn = driver.find_element(by=AppiumBy.ID, value= "com.saucelabs.mydemoapp.android:id/paymentBtn")
 review_order_btn.click()
 
 # Validate that the Checkout, Review your order screen has been displayed.
